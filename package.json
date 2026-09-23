@@ -9,11 +9,13 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "sql.js": "^1.14.2",
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "@types/sql.js": "^1.4.11",
+    "@types/three": "^0.180.0",
     "typescript": "^5.9.3",
-    "vite": "^7.1.12",
-    "@types/three": "^0.180.0"
+    "vite": "^7.1.12"
   }
 }

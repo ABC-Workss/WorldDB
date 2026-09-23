@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { eras, type Era } from './data';
+import { gameMarkup, bindGame } from './game';
 import './style.css';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -40,6 +41,10 @@ function icon(name: string, size = 54): string {
 function sceneArt(type: string, label: string): string {
   const sky = '<circle cx="277" cy="38" r="17" fill="#ffe790"/><path d="M9 129Q79 81 145 120T291 117V166H9Z" fill="#a7d69b"/><path d="M9 150Q80 122 157 151T291 140V180H9Z" fill="#71bd9b"/>';
   const pieces: Record<string, string> = {
+    'garden-missing': `<path d="M69 149V51" stroke="#7d674d" stroke-width="13" stroke-linecap="round"/><circle cx="70" cy="59" r="36" fill="#8acc70"/><circle cx="43" cy="74" r="25" fill="#9ed87f"/><circle cx="93" cy="76" r="24" fill="#86c86c"/><path d="M109 143q20-27 42 0v25h-42Z" fill="#e9a67f"/><circle cx="130" cy="118" r="16" fill="#f5c29d"/><path d="M194 148q18-25 38 0v23h-38Z" fill="#e2bc7d"/><circle cx="213" cy="125" r="15" fill="#f5c29d"/><path d="M246 161q-12-20 2-29 12-7 16 3-2 7-10 5" fill="none" stroke="#536d53" stroke-width="8" stroke-linecap="round"/>`,
+    'garden-trail': `<path d="M59 150V50" stroke="#7d674d" stroke-width="12" stroke-linecap="round"/><circle cx="58" cy="60" r="34" fill="#8acc70"/><circle cx="35" cy="75" r="22" fill="#9ed87f"/><circle cx="82" cy="77" r="23" fill="#86c86c"/><circle cx="73" cy="51" r="5" fill="#ec8063"/><path d="M120 170q35-55 98-44t78 32" fill="none" stroke="#ead1a4" stroke-width="27"/><ellipse cx="142" cy="145" rx="7" ry="4" transform="rotate(-18 142 145)" fill="#af846c"/><ellipse cx="166" cy="134" rx="7" ry="4" transform="rotate(13 166 134)" fill="#af846c"/><ellipse cx="191" cy="134" rx="7" ry="4" transform="rotate(-14 191 134)" fill="#af846c"/><path d="M229 151q-16-24 2-35 15-8 18 4-2 7-11 5" fill="none" stroke="#536d53" stroke-width="9" stroke-linecap="round"/><circle cx="251" cy="117" r="2" fill="#34364a"/>`,
+    'garden-basket': `<path d="M61 151V51" stroke="#7d674d" stroke-width="12" stroke-linecap="round"/><circle cx="60" cy="61" r="35" fill="#8acc70"/><circle cx="36" cy="75" r="23" fill="#9ed87f"/><circle cx="84" cy="77" r="22" fill="#86c86c"/><path d="M132 148q18-25 37 0v24h-37Z" fill="#e2bc7d"/><circle cx="150" cy="124" r="17" fill="#f5c29d"/><path d="M183 158q30-19 71 0l-6 20h-59Z" fill="#cf8d58" stroke="#8f654e" stroke-width="3"/><path d="M194 159q3-32 26-32t25 32" fill="none" stroke="#8f654e" stroke-width="5"/><circle cx="217" cy="149" r="8" fill="#ec8063"/><path d="M215 138q4-7 10-5" fill="none" stroke="#4f9665" stroke-width="3"/>`,
+    'garden-picnic': `<path d="M45 150V61" stroke="#7d674d" stroke-width="12" stroke-linecap="round"/><circle cx="46" cy="68" r="34" fill="#8acc70"/><circle cx="22" cy="80" r="21" fill="#9ed87f"/><circle cx="70" cy="82" r="21" fill="#86c86c"/><path d="m112 157 70-23 75 29-62 17Z" fill="#f6cb7b" stroke="#d58f6a" stroke-width="4"/><path d="m133 152 65 24m-32-32 63 25" stroke="#fff6e0" stroke-width="5"/><path d="M110 127q14-18 29 0v24h-29Z" fill="#e9a67f"/><circle cx="125" cy="107" r="13" fill="#f5c29d"/><path d="M174 121q14-18 29 0v24h-29Z" fill="#e2bc7d"/><circle cx="189" cy="101" r="13" fill="#f5c29d"/><path d="M242 151q-16-22 1-32 12-6 16 4-2 7-10 5" fill="none" stroke="#536d53" stroke-width="8" stroke-linecap="round"/><path d="M205 150q20-12 40 0l-5 15h-31Z" fill="#cf8d58" stroke="#8f654e" stroke-width="3"/><circle cx="223" cy="143" r="8" fill="#ec8063"/>`,
     garden: `<path d="M68 147V51" stroke="#7d674d" stroke-width="13" stroke-linecap="round"/><circle cx="70" cy="59" r="36" fill="#8acc70"/><circle cx="43" cy="74" r="25" fill="#9ed87f"/><circle cx="93" cy="76" r="24" fill="#86c86c"/><circle cx="55" cy="46" r="5" fill="#ec8063"/><circle cx="87" cy="61" r="5" fill="#ec8063"/><path d="M117 115q18-23 34 0v39h-34Z" fill="#e9a67f"/><circle cx="134" cy="92" r="14" fill="#f5c29d"/><path d="M174 115q18-23 34 0v39h-34Z" fill="#e2bc7d"/><circle cx="191" cy="92" r="14" fill="#f5c29d"/><path d="M225 150q-11-18 1-27 11-7 14 1-2 8-10 4" fill="none" stroke="#536d53" stroke-width="8" stroke-linecap="round"/>`,
     farm: `<path d="M4 159q76-38 143-8t149-6" fill="none" stroke="#5ca66e" stroke-width="6"/><path d="m164 113 42-34 43 34v43h-85Z" fill="#f2cb7f"/><path d="m157 115 49-43 49 43" fill="none" stroke="#9d6559" stroke-width="9" stroke-linejoin="round"/><path d="M195 156v-25h19v25" fill="#aa785b"/><path d="M51 153V91m0 45-20-20m20 3 20-21M93 152V104m0 33-18-15m18-3 17-19" fill="none" stroke="#4f9665" stroke-width="7" stroke-linecap="round"/><path d="M26 102q23-20 24 13-23 9-24-13Zm26-10q20-20 27 0-15 21-27 0ZM80 110q18-17 16 14-19 5-16-14Zm15-20q18-16 23 0-16 17-23 0Z" fill="#8fc96c"/><path d="M257 144h22l8-10 8 6-4 14h-31Z" fill="#f5e8cc"/>`,
     writing: `<path d="M40 160 49 54q89-19 170 0l8 106Z" fill="#c99462" stroke="#9c6b4e" stroke-width="5"/><path d="m76 79 20-8-11 18m30-16 21 4-13 13m35-16 20-7-9 17M78 109l18-6-7 16m32-11 20 4-13 12m38-19 22-8-10 18M81 135l18-5m33 2 20-6m29 5 18-5" fill="none" stroke="#8f654e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="m229 42 27 82" stroke="#7c5b45" stroke-width="8" stroke-linecap="round"/>`,
@@ -63,13 +68,31 @@ function details(era: Era): string {
   <div class="system-log"><span class="log-mark">✦</span><span class="log-label">LOG DO SISTEMA</span><strong>${era.log}</strong></div></section>`;
 }
 
-function render(): void {
+function header(mode: 'home' | 'explore' | 'game'): string {
+  return `<header class="site-header"><a class="brand" href="/" data-nav aria-label="WorldDB, voltar ao início"><span class="brand-mark">${icon('web', 35)}</span><span>World<span class="brand-db">DB</span></span></a><div class="header-note">e se o mundo fosse um software?</div><nav class="site-nav" aria-label="Menu principal"><a class="header-link ${mode === 'home' ? 'nav-active' : ''}" href="/" data-nav>Início</a><a class="header-link ${mode === 'game' ? 'nav-active' : ''}" href="/jogar" data-nav>Jogar</a><a class="header-link ${mode === 'explore' ? 'nav-active' : ''}" href="/explorar" data-nav>Explorar</a></nav></header>`;
+}
+
+function globeMarkup(era: Era): string {
+  return `<div class="hero-globe"><span class="deco star star-one">✦</span><span class="deco star star-two">✳</span><span class="deco cloud cloud-one"></span><span class="deco cloud cloud-two"></span><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div id="globe" class="globe-canvas" role="img" aria-label="Globo artístico interativo; arraste para girar"></div><div class="globe-caption"><span class="globe-caption-icon">↔</span> Arraste para girar o globo</div><div class="scene-sticker">${sceneArt(era.scene, era.kicker)}</div></div>`;
+}
+
+function renderHome(): void {
+  const era = eras[0];
+  document.documentElement.style.setProperty('--era', era.accent);
+  document.documentElement.style.setProperty('--era-pale', era.pale);
+  app.innerHTML = `${header('home')}<main id="top"><div class="intro-line"><span class="intro-spark">✳</span> Uma aventura para aprender SQL <span class="intro-spark">✳</span></div><section class="hero home-hero" aria-labelledby="home-title">${globeMarkup(era)}<div class="hero-story"><div class="chapter-pill"><span class="chapter-dot"></span> WORLDDB · A PRIMEIRA AVENTURA</div><span class="story-kicker">Um mistério em cada consulta</span><h1 id="home-title">O mundo é um banco de dados.</h1><p class="home-subtitle">Descubra suas histórias com SQL.</p><p class="story-summary">Aprenda a fazer perguntas aos dados enquanto investiga um pequeno mistério no jardim. Nenhuma experiência com programação é necessária.</p><div class="home-actions"><a class="game-button" href="/jogar" data-nav>Jogar <span aria-hidden="true">→</span></a><a class="outline-button" href="/explorar" data-nav>Explorar o mundo</a></div></div></section><section class="home-preview paper-panel" aria-labelledby="preview-title"><div class="preview-art">${sceneArt('garden', 'um jardim fictício')}</div><div><span class="section-eyebrow">História 01 · prólogo do jardim</span><h2 id="preview-title">O caso da fruta sumida</h2><p>Uma fruta desapareceu da árvore. Adão, Eva e Cobra têm histórias para contar. Quem passou por ali? O que aconteceu?</p><p>Você vai escrever consultas curtas para encontrar pistas. Cada resposta abre a próxima cena.</p><span class="fiction-note">✧ História inventada para o jogo, inspirada na narrativa bíblica — sem data histórica</span><div><a class="text-link" href="/jogar" data-nav>Começar a investigação →</a></div></div></section><section class="home-more"><span class="section-eyebrow">O mundo continua</span><h2>Seis capítulos para explorar</h2><p>A linha do tempo original segue aberta, com entidades, relações, consultas ilustrativas e fontes.</p><a class="outline-button" href="/explorar" data-nav>Ver linha do tempo →</a></section></main>`;
+  app.querySelector<HTMLHeadingElement>('#preview-title')!.textContent = 'O grande sumiço da fruta';
+  app.querySelector<HTMLParagraphElement>('.home-preview p')!.textContent = 'Pouco antes da festa, a fruta desapareceu. Cobra parece suspeita, mas os registros do jardim podem contar outra história.';
+  initGlobe(era);
+}
+
+function renderExplore(): void {
   const era = eras[active];
   document.documentElement.style.setProperty('--era', era.accent);
   document.documentElement.style.setProperty('--era-pale', era.pale);
-  app.innerHTML = `<header class="site-header"><a class="brand" href="#top" aria-label="WorldDB, voltar ao início"><span class="brand-mark">${icon('web', 35)}</span><span>World<span class="brand-db">DB</span></span></a><div class="header-note">e se o mundo fosse um software?</div><a class="header-link" href="#fontes">Fontes <span aria-hidden="true">↗</span></a></header>
+  app.innerHTML = `${header('explore')}
   <main id="top"><div class="intro-line"><span class="intro-spark">✳</span> Uma aventura ilustrada pelos registros da humanidade <span class="intro-spark">✳</span></div>
-  <section class="hero" aria-label="Explore as épocas"><div class="hero-globe"><span class="deco star star-one">✦</span><span class="deco star star-two">✳</span><span class="deco cloud cloud-one"></span><span class="deco cloud cloud-two"></span><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div id="globe" class="globe-canvas" role="img" aria-label="Globo artístico interativo; arraste para girar"></div><div class="globe-caption"><span class="globe-caption-icon">↔</span> Arraste para girar o globo</div><div class="scene-sticker">${sceneArt(era.scene, era.kicker)}</div></div>
+  <section class="hero" aria-label="Explore as épocas">${globeMarkup(era)}
   <div class="hero-story"><div class="chapter-pill"><span class="chapter-dot"></span> CAPÍTULO ${String(active + 1).padStart(2, '0')} / ${String(eras.length).padStart(2, '0')}</div><span class="story-kicker">${era.kicker}</span><h1>${era.title}</h1><div class="story-year">${era.year}</div><p class="story-summary">${era.summary}</p>${era.note ? `<div class="fiction-note">✧ ${era.note}</div>` : ''}<div class="story-actions"><button type="button" class="round-nav" id="previous" aria-label="Capítulo anterior" ${active === 0 ? 'disabled' : ''}>←</button><span>${String(active + 1).padStart(2, '0')} <span class="page-divider">/</span> ${String(eras.length).padStart(2, '0')}</span><button type="button" class="round-nav" id="next" aria-label="Próximo capítulo" ${active === eras.length - 1 ? 'disabled' : ''}>→</button><a href="#data-title" class="data-link">Explorar os dados ↓</a></div></div></section>
   <section class="timeline-section" aria-label="Linha do tempo">${timeline()}</section>${details(era)}
   <footer id="fontes"><div class="footer-title"><span class="footer-flower">✿</span><div><span class="section-eyebrow">Para continuar a aventura</span><h2>Fontes e notas</h2></div></div><p>Datas e acontecimentos históricos seguem as fontes abaixo. As ilustrações são simbólicas; os IDs, entidades, relações e consultas SQL são invenções do projeto. O Éden é apresentado como narrativa bíblica.</p><div class="source-links"><a href="https://www.si.edu/object/research-origins-agriculture-between-foraging-and-farming%3Aslasro_76126" target="_blank" rel="noopener noreferrer">Smithsonian ↗</a><a href="https://www.britishmuseum.org/sites/default/files/2019-09/Visit_Mesopotamia_KS2b.pdf" target="_blank" rel="noopener noreferrer">British Museum ↗</a><a href="https://www.loc.gov/item/2021666734/" target="_blank" rel="noopener noreferrer">Library of Congress ↗</a><a href="https://www.nasa.gov/mission/apollo-11/" target="_blank" rel="noopener noreferrer">NASA ↗</a><a href="https://home.cern/science/computing/the-birth-of-the-web/where-web-was-born/" target="_blank" rel="noopener noreferrer">CERN ↗</a><a href="https://www.biblegateway.com/passage/?search=Genesis%202-3&version=ARC" target="_blank" rel="noopener noreferrer">Gênesis 2–3 ↗</a></div><div class="footer-end">WorldDB <span>✦</span> Um pequeno experimento sobre um mundo enorme.</div></footer></main>`;
@@ -87,7 +110,7 @@ function selectEra(index: number): void {
   const wasNext = oldFocus.id === 'next';
   active = index;
   disposeGlobe();
-  render();
+  renderExplore();
   if (wasTimeline) app.querySelector<HTMLButtonElement>(`[data-era="${index}"]`)?.focus({ preventScroll: true });
   else if (wasPrev || wasNext) app.querySelector<HTMLButtonElement>(`#${wasPrev ? 'previous' : 'next'}`)?.focus({ preventScroll: true });
   app.querySelector('.time-point.is-active')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
@@ -164,4 +187,24 @@ document.addEventListener('keydown', event => {
   }
 });
 reducedMotion.addEventListener('change', () => { if (controls) { controls.autoRotate = !reducedMotion.matches; controls.enableDamping = !reducedMotion.matches; } });
+function render(): void {
+  disposeGlobe();
+  if (location.pathname === '/jogar') {
+    document.documentElement.style.setProperty('--era', eras[0].accent);
+    document.documentElement.style.setProperty('--era-pale', eras[0].pale);
+    app.innerHTML = `${header('game')}${gameMarkup(sceneArt)}`;
+    bindGame(app, sceneArt);
+  } else if (location.pathname === '/explorar') renderExplore();
+  else renderHome();
+}
+
+document.addEventListener('click', event => {
+  const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[data-nav]');
+  if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+  event.preventDefault();
+  if (location.pathname !== link.pathname) history.pushState({}, '', link.pathname);
+  render();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+});
+window.addEventListener('popstate', render);
 render();
