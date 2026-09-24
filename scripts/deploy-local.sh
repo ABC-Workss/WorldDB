@@ -106,7 +106,7 @@ fi
 
 if ! wait_for_http "http://127.0.0.1:$port/" \
   || ! curl --fail --silent --show-error "http://127.0.0.1:$port/jogar" >/dev/null \
-  || ! curl --fail --silent --show-error "http://127.0.0.1:$port/explorar" >/dev/null; then
+  || ! curl --fail --silent --show-error "http://127.0.0.1:$port/explorar" >/dev/null \n  || ! curl --fail --silent --show-error "http://127.0.0.1:$port/aprender/01" >/dev/null; then
   rollback
   exit 1
 fi

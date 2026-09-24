@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "check:lesson": "node --experimental-strip-types scripts/check-lesson.mjs"
   },
   "dependencies": {
     "sql.js": "^1.14.2",

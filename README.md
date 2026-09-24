@@ -11,6 +11,14 @@ npm run dev
 
 Abra o endereço `Local` exibido pelo Vite no terminal.
 
+## Conferir a Documentação 01
+
+```bash
+npm run check:lesson
+```
+
+Roda cada exemplo e cada resposta da aula no mesmo sql.js do site e confere o resultado esperado, o isolamento da base de treino e as colunas reais da primeira missão. O CI executa essa checagem antes do build.
+
 ## Compilar
 
 ```bash
@@ -46,6 +54,7 @@ O deploy mantem tudo em `~/projetos/worlddb`: publica em `dist/`, cria backups e
 ## Percursos
 
 - `/`: abertura do jogo, com globo 3D e prévia da primeira história.
+- `/aprender/01`: Documentação 01, primeiras consultas (`SELECT`, colunas, `WHERE`, `ORDER BY`). É para onde leva o botão **Jogar** da página inicial; quem já sabe SQL pode ir direto ao jogo. Os exemplos e exercícios rodam numa base de treino isolada (`src/lesson-data.ts`), separada do mistério.
 - `/jogar`: seis momentos de investigação com `SELECT`, `WHERE`, filtros combinados, `ORDER BY` e `JOIN`. O progresso e a preferência de som ficam apenas no `localStorage` do navegador.
 - `/explorar`: os seis capítulos da linha do tempo, com entidades, relações e fontes.
 

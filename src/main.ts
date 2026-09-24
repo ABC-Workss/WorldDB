@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { eras, type Era } from './data';
-import { gameMarkup, bindGame } from './game';
+import { gameMarkup, bindGame, disposeGame } from './game';
+import { lessonMarkup, bindLesson, disposeLesson } from './lesson';
 import './style.css';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -68,8 +69,8 @@ function details(era: Era): string {
   <div class="system-log"><span class="log-mark">✦</span><span class="log-label">LOG DO SISTEMA</span><strong>${era.log}</strong></div></section>`;
 }
 
-function header(mode: 'home' | 'explore' | 'game'): string {
-  return `<header class="site-header"><a class="brand" href="/" data-nav aria-label="WorldDB, voltar ao início"><span class="brand-mark">${icon('web', 35)}</span><span>World<span class="brand-db">DB</span></span></a><div class="header-note">e se o mundo fosse um software?</div><nav class="site-nav" aria-label="Menu principal"><a class="header-link ${mode === 'home' ? 'nav-active' : ''}" href="/" data-nav>Início</a><a class="header-link ${mode === 'game' ? 'nav-active' : ''}" href="/jogar" data-nav>Jogar</a><a class="header-link ${mode === 'explore' ? 'nav-active' : ''}" href="/explorar" data-nav>Explorar</a></nav></header>`;
+function header(mode: 'home' | 'explore' | 'learn'): string {
+  return `<header class="site-header"><a class="brand" href="/" data-nav aria-label="WorldDB, voltar ao início"><span class="brand-mark">${icon('web', 35)}</span><span>World<span class="brand-db">DB</span></span></a><div class="header-note">e se o mundo fosse um software?</div><nav class="site-nav" aria-label="Menu principal"><a class="header-link ${mode === 'home' ? 'nav-active' : ''}" href="/" data-nav>Início</a><a class="header-link ${mode === 'learn' ? 'nav-active' : ''}" href="/aprender/01" data-nav>Aprender</a><a class="header-link" href="/jogar" data-nav>Jogar</a><a class="header-link ${mode === 'explore' ? 'nav-active' : ''}" href="/explorar" data-nav>Explorar</a></nav></header>`;
 }
 
 function globeMarkup(era: Era): string {
@@ -80,7 +81,7 @@ function renderHome(): void {
   const era = eras[0];
   document.documentElement.style.setProperty('--era', era.accent);
   document.documentElement.style.setProperty('--era-pale', era.pale);
-  app.innerHTML = `${header('home')}<main id="top"><div class="intro-line"><span class="intro-spark">✳</span> Uma aventura para aprender SQL <span class="intro-spark">✳</span></div><section class="hero home-hero" aria-labelledby="home-title">${globeMarkup(era)}<div class="hero-story"><div class="chapter-pill"><span class="chapter-dot"></span> WORLDDB · A PRIMEIRA AVENTURA</div><span class="story-kicker">Um mistério em cada consulta</span><h1 id="home-title">O mundo é um banco de dados.</h1><p class="home-subtitle">Descubra suas histórias com SQL.</p><p class="story-summary">Aprenda a fazer perguntas aos dados enquanto investiga um pequeno mistério no jardim. Nenhuma experiência com programação é necessária.</p><div class="home-actions"><a class="game-button" href="/jogar" data-nav>Jogar <span aria-hidden="true">→</span></a><a class="outline-button" href="/explorar" data-nav>Explorar o mundo</a></div></div></section><section class="home-preview paper-panel" aria-labelledby="preview-title"><div class="preview-art">${sceneArt('garden', 'um jardim fictício')}</div><div><span class="section-eyebrow">História 01 · prólogo do jardim</span><h2 id="preview-title">O caso da fruta sumida</h2><p>Uma fruta desapareceu da árvore. Adão, Eva e Cobra têm histórias para contar. Quem passou por ali? O que aconteceu?</p><p>Você vai escrever consultas curtas para encontrar pistas. Cada resposta abre a próxima cena.</p><span class="fiction-note">✧ História inventada para o jogo, inspirada na narrativa bíblica — sem data histórica</span><div><a class="text-link" href="/jogar" data-nav>Começar a investigação →</a></div></div></section><section class="home-more"><span class="section-eyebrow">O mundo continua</span><h2>Seis capítulos para explorar</h2><p>A linha do tempo original segue aberta, com entidades, relações, consultas ilustrativas e fontes.</p><a class="outline-button" href="/explorar" data-nav>Ver linha do tempo →</a></section></main>`;
+  app.innerHTML = `${header('home')}<main id="top"><div class="intro-line"><span class="intro-spark">✳</span> Uma aventura para aprender SQL <span class="intro-spark">✳</span></div><section class="hero home-hero" aria-labelledby="home-title">${globeMarkup(era)}<div class="hero-story"><div class="chapter-pill"><span class="chapter-dot"></span> WORLDDB · A PRIMEIRA AVENTURA</div><span class="story-kicker">Um mistério em cada consulta</span><h1 id="home-title">O mundo é um banco de dados.</h1><p class="home-subtitle">Descubra suas histórias com SQL.</p><p class="story-summary">Aprenda a fazer perguntas aos dados enquanto investiga um pequeno mistério no jardim. Nenhuma experiência com programação é necessária.</p><div class="home-actions"><a class="game-button" href="/aprender/01" data-nav>Jogar <span aria-hidden="true">→</span></a><a class="outline-button" href="/explorar" data-nav>Explorar o mundo</a></div></div></section><section class="home-preview paper-panel" aria-labelledby="preview-title"><div class="preview-art">${sceneArt('garden', 'um jardim fictício')}</div><div><span class="section-eyebrow">História 01 · prólogo do jardim</span><h2 id="preview-title">O caso da fruta sumida</h2><p>Uma fruta desapareceu da árvore. Adão, Eva e Cobra têm histórias para contar. Quem passou por ali? O que aconteceu?</p><p>Você vai escrever consultas curtas para encontrar pistas. Cada resposta abre a próxima cena.</p><span class="fiction-note">✧ História inventada para o jogo, inspirada na narrativa bíblica — sem data histórica</span><div><a class="text-link" href="/aprender/01" data-nav>Começar a investigação →</a></div></div></section><section class="home-more"><span class="section-eyebrow">O mundo continua</span><h2>Seis capítulos para explorar</h2><p>A linha do tempo original segue aberta, com entidades, relações, consultas ilustrativas e fontes.</p><a class="outline-button" href="/explorar" data-nav>Ver linha do tempo →</a></section></main>`;
   app.querySelector<HTMLHeadingElement>('#preview-title')!.textContent = 'O grande sumiço da fruta';
   app.querySelector<HTMLParagraphElement>('.home-preview p')!.textContent = 'Pouco antes da festa, a fruta desapareceu. Cobra parece suspeita, mas os registros do jardim podem contar outra história.';
   initGlobe(era);
@@ -187,12 +188,22 @@ document.addEventListener('keydown', event => {
   }
 });
 reducedMotion.addEventListener('change', () => { if (controls) { controls.autoRotate = !reducedMotion.matches; controls.enableDamping = !reducedMotion.matches; } });
+const siteTitle = 'WorldDB — descubra histórias com SQL';
+
 function render(): void {
   disposeGlobe();
-  if (location.pathname === '/jogar') {
+  disposeGame();
+  disposeLesson();
+  document.title = siteTitle;
+  if (location.pathname === '/aprender' || location.pathname === '/aprender/') history.replaceState({}, '', '/aprender/01');
+  if (location.pathname === '/aprender/01') {
+    document.title = 'Documentação 01: Primeiras consultas — WorldDB';
+    app.innerHTML = `${header('learn')}${lessonMarkup()}`;
+    bindLesson(app);
+  } else if (location.pathname === '/jogar') {
     document.documentElement.style.setProperty('--era', eras[0].accent);
     document.documentElement.style.setProperty('--era-pale', eras[0].pale);
-    app.innerHTML = `${header('game')}${gameMarkup(sceneArt)}`;
+    app.innerHTML = gameMarkup(sceneArt);
     bindGame(app, sceneArt);
   } else if (location.pathname === '/explorar') renderExplore();
   else renderHome();
