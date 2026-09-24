@@ -1,6 +1,6 @@
 param(
     [string]$RemoteUser = "picoli",
-    [string]$RemoteHost = "192.168.1.11",
+    [string]$RemoteHost = "debian01",
     [int]$Port = 4174,
     [Security.SecureString]$RemotePassword
 )
@@ -47,9 +47,11 @@ $projectRoot = $PSScriptRoot
 $localDist = Join-Path $projectRoot "dist"
 $remote = "$RemoteUser@$RemoteHost"
 $deploymentId = [guid]::NewGuid().ToString("N")
-$remoteTemp = "/home/$RemoteUser/temp/worlddb-$deploymentId"
 $remoteProject = "/home/$RemoteUser/projetos/worlddb"
-$remoteBackup = "/home/$RemoteUser/backup/worlddb"
+$remoteTempRoot = "$remoteProject/temp"
+$remoteTemp = "$remoteTempRoot/$deploymentId"
+$remoteBackup = "$remoteProject/backup"
+$remotePrevious = "$remoteTemp/dist.previous"
 $pm2ProcessName = "worlddb"
 $sshOptions = @(
     "-o", "BatchMode=no",
@@ -94,7 +96,7 @@ try {
     }
 
     Write-Host "3/8 Validando o servidor e preparando diretorios..."
-    $prepareCommand = "set -e; command -v pm2 >/dev/null 2>&1 || { echo 'PM2 nao esta instalado.' >&2; exit 1; }; if ! pm2 describe '$pm2ProcessName' >/dev/null 2>&1 && ss -ltn | grep -q ':$Port '; then echo 'A porta $Port ja esta em uso.' >&2; exit 1; fi; mkdir -p '$remoteTemp' '$remoteProject' '$remoteBackup'"
+    $prepareCommand = "set -e; command -v pm2 >/dev/null 2>&1 || { echo 'PM2 nao esta instalado.' >&2; exit 1; }; command -v curl >/dev/null 2>&1 || { echo 'curl nao esta instalado.' >&2; exit 1; }; if ! pm2 describe '$pm2ProcessName' >/dev/null 2>&1 && ss -ltn | grep -q ':$Port '; then echo 'A porta $Port ja esta em uso.' >&2; exit 1; fi; mkdir -p '$remoteProject' '$remoteTempRoot' '$remoteBackup' '$remoteTemp'"
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $prepareCommand))
 
     Write-Host "4/8 Enviando a dist para $remote..."
@@ -106,15 +108,15 @@ try {
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $backupCommand))
 
     Write-Host "6/8 Publicando a nova dist..."
-    $publishCommand = "set -e; rm -rf '$remoteProject/dist.previous'; if [ -d '$remoteProject/dist' ]; then mv '$remoteProject/dist' '$remoteProject/dist.previous'; fi; if mv '$remoteTemp/dist' '$remoteProject/dist'; then rm -rf '$remoteProject/dist.previous' '$remoteTemp'; else if [ -d '$remoteProject/dist.previous' ]; then mv '$remoteProject/dist.previous' '$remoteProject/dist'; fi; exit 1; fi"
+    $publishCommand = "set -e; rm -rf '$remotePrevious'; if [ -d '$remoteProject/dist' ]; then mv '$remoteProject/dist' '$remotePrevious'; fi; if ! mv '$remoteTemp/dist' '$remoteProject/dist'; then if [ -d '$remotePrevious' ]; then mv '$remotePrevious' '$remoteProject/dist'; fi; exit 1; fi"
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $publishCommand))
 
     Write-Host "7/8 Criando ou reiniciando o processo PM2..."
-    $pm2Command = "set -e; if pm2 describe '$pm2ProcessName' >/dev/null 2>&1; then pm2 restart '$pm2ProcessName' --update-env; else pm2 serve '$remoteProject/dist' '$Port' --name '$pm2ProcessName' --spa; fi; pm2 save"
+    $pm2Command = "set -e; if pm2 describe '$pm2ProcessName' >/dev/null 2>&1; then touch '$remoteTemp/had-process'; if ! pm2 restart '$pm2ProcessName' --update-env; then rm -rf '$remoteProject/dist'; if [ -d '$remotePrevious' ]; then mv '$remotePrevious' '$remoteProject/dist'; fi; pm2 restart '$pm2ProcessName' --update-env >/dev/null 2>&1 || true; exit 1; fi; else touch '$remoteTemp/new-process'; if ! pm2 serve '$remoteProject/dist' '$Port' --name '$pm2ProcessName' --spa; then rm -rf '$remoteProject/dist'; if [ -d '$remotePrevious' ]; then mv '$remotePrevious' '$remoteProject/dist'; fi; exit 1; fi; fi"
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $pm2Command))
 
     Write-Host "8/8 Validando a publicacao..."
-    $healthCommand = "set -e; curl -fsS 'http://127.0.0.1:$Port/' >/dev/null; curl -fsS 'http://127.0.0.1:$Port/jogar' >/dev/null; curl -fsS 'http://127.0.0.1:$Port/explorar' >/dev/null"
+    $healthCommand = "set -e; if curl -fsS 'http://127.0.0.1:$Port/' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/jogar' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/explorar' >/dev/null; then rm -rf '$remoteTemp'; pm2 save; else rm -rf '$remoteProject/dist'; if [ -d '$remotePrevious' ]; then mv '$remotePrevious' '$remoteProject/dist'; fi; if [ -f '$remoteTemp/new-process' ]; then pm2 delete '$pm2ProcessName' >/dev/null 2>&1 || true; else pm2 restart '$pm2ProcessName' --update-env >/dev/null 2>&1 || true; fi; exit 1; fi"
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $healthCommand))
 
     Write-Host "Deploy concluido com sucesso em http://${RemoteHost}:$Port"

@@ -23,13 +23,14 @@ done
 
 process_name="worlddb"
 project_dir="$HOME/projetos/worlddb"
-backup_dir="$HOME/backup/worlddb"
-release_dir="$HOME/temp/worlddb-$deploy_id"
+backup_dir="$project_dir/backup"
+temp_dir="$project_dir/temp"
+release_dir="$temp_dir/$deploy_id"
 current_dist="$project_dir/dist"
 previous_dist="$project_dir/dist.previous"
 started_new_process=0
 
-if [[ "$release_dir" != "$HOME/temp/worlddb-"* ]]; then
+if [[ "$release_dir" != "$project_dir/temp/"* ]]; then
   echo "Diretorio temporario inesperado: $release_dir" >&2
   exit 1
 fi
@@ -44,7 +45,7 @@ if ! pm2 describe "$process_name" >/dev/null 2>&1 && ss -ltn | grep -Eq ":${port
   exit 1
 fi
 
-mkdir -p "$project_dir" "$backup_dir" "$HOME/temp"
+mkdir -p "$project_dir" "$backup_dir" "$temp_dir"
 rm -rf "$release_dir"
 mkdir -p "$release_dir"
 cp -a dist "$release_dir/dist"
