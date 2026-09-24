@@ -16,10 +16,7 @@ concurrency:
 jobs:
   deploy:
     name: Build and deploy
-    runs-on:
-      - self-hosted
-      - linux
-      - x64
+    runs-on: self-hosted
     timeout-minutes: 15
     environment: production
     env:
