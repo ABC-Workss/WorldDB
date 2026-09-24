@@ -18,6 +18,31 @@ npm run build
 npm run preview
 ```
 
+## Deploy automatico no Debian
+
+O workflow `.github/workflows/deploy.yml` compila e publica o site somente em pushes para `main`. A branch padrao de desenvolvimento e `develop`; integre `develop` em `main` quando quiser publicar. Como o servidor usa um IP privado, o job roda em um GitHub Actions runner self-hosted instalado no proprio Debian.
+
+Preparacao unica:
+
+1. No Debian, confirme que `pm2`, `curl` e `ss` estao disponiveis para o usuario que executara o runner. Instale o PM2, se necessario, com `npm install --global pm2`.
+2. No repositorio do GitHub, abra **Settings > Actions > Runners > New self-hosted runner**, escolha Linux/x64 e execute no Debian os comandos gerados pelo GitHub como o usuario de deploy.
+3. Instale o runner como servico seguindo a etapa exibida pelo GitHub, para ele voltar automaticamente apos reiniciar o Debian.
+4. Opcionalmente, crie a variavel de repositorio `WORLDDB_PORT` em **Settings > Secrets and variables > Actions > Variables**. O valor padrao e `4174`.
+5. Para manter o processo PM2 apos reinicializacoes, execute uma vez `pm2 startup`, siga o comando que ele imprimir e depois rode `pm2 save`.
+
+No Cloudflare Zero Trust, abra o Tunnel que ja roda no Debian e adicione um **Public Hostname** com:
+
+- Subdominio: `worlddb`
+- Dominio: `picoli.dev.br`
+- Tipo: `HTTP`
+- URL do servico: `localhost:4174`
+
+O endereco publico sera `https://worlddb.picoli.dev.br`. Nao e necessario liberar a porta `4174` no roteador ou firewall, pois o `cloudflared` acessa o servico localmente.
+
+O deploy cria backups em `~/backup/worlddb`, publica em `~/projetos/worlddb/dist`, valida `/`, `/jogar` e `/explorar` e restaura a versao anterior se a verificacao falhar. Nenhuma senha SSH e necessaria nesse modelo.
+
+> Por seguranca, use runner self-hosted apenas quando voce controla quem pode alterar ou executar workflows no repositorio. O GitHub recomenda cautela especial em repositorios publicos.
+
 ## Percursos
 
 - `/`: abertura do jogo, com globo 3D e prévia da primeira história.
