@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate deploy script
+        run: bash -n scripts/deploy-local.sh
+
       - name: Check lesson queries
         run: npm run check:lesson
 
