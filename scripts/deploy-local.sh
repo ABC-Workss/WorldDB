@@ -74,6 +74,23 @@ rollback() {
   fi
 }
 
+wait_for_http() {
+  local url="$1"
+  local max_attempts="${2:-20}"
+  local attempt
+
+  for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+    if curl --fail --silent "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    echo "Aguardando o WorldDB responder em $url ($attempt/$max_attempts)..."
+    sleep 1
+  done
+
+  curl --fail --silent --show-error "$url" >/dev/null
+}
+
 if pm2 describe "$process_name" >/dev/null 2>&1; then
   if ! pm2 restart "$process_name" --update-env; then
     rollback
@@ -87,7 +104,7 @@ else
   fi
 fi
 
-if ! curl --fail --silent --show-error "http://127.0.0.1:$port/" >/dev/null \
+if ! wait_for_http "http://127.0.0.1:$port/" \
   || ! curl --fail --silent --show-error "http://127.0.0.1:$port/jogar" >/dev/null \
   || ! curl --fail --silent --show-error "http://127.0.0.1:$port/explorar" >/dev/null; then
   rollback
