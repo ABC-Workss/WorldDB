@@ -39,7 +39,7 @@ No Cloudflare Zero Trust, abra o Tunnel que ja roda no Debian e adicione um **Pu
 
 O endereco publico sera `https://worlddb.picoli.dev.br`. Nao e necessario liberar a porta `4174` no roteador ou firewall, pois o `cloudflared` acessa o servico localmente.
 
-O deploy cria backups em `~/backup/worlddb`, publica em `~/projetos/worlddb/dist`, valida `/`, `/jogar` e `/explorar` e restaura a versao anterior se a verificacao falhar. Nenhuma senha SSH e necessaria nesse modelo.
+O deploy mantem tudo em `~/projetos/worlddb`: publica em `dist/`, cria backups em `backup/` e usa `temp/` durante a troca. Ele valida `/`, `/jogar` e `/explorar` e restaura a versao anterior se a verificacao falhar. Nenhuma senha SSH e necessaria no modelo com runner self-hosted.
 
 > Por seguranca, use runner self-hosted apenas quando voce controla quem pode alterar ou executar workflows no repositorio. O GitHub recomenda cautela especial em repositorios publicos.
 
