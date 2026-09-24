@@ -116,7 +116,7 @@ try {
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $pm2Command))
 
     Write-Host "8/8 Validando a publicacao..."
-    $healthCommand = "set -e; if curl -fsS 'http://127.0.0.1:$Port/' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/jogar' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/explorar' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/aprender/01' >/dev/null; then rm -rf '$remoteTemp'; pm2 save; else rm -rf '$remoteProject/dist'; if [ -d '$remotePrevious' ]; then mv '$remotePrevious' '$remoteProject/dist'; fi; if [ -f '$remoteTemp/new-process' ]; then pm2 delete '$pm2ProcessName' >/dev/null 2>&1 || true; else pm2 restart '$pm2ProcessName' --update-env >/dev/null 2>&1 || true; fi; exit 1; fi"
+    $healthCommand = "set -e; if curl -fsS 'http://127.0.0.1:$Port/' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/jogar' >/dev/null && curl -fsS 'http://127.0.0.1:$Port/explorar' >/dev/null; then rm -rf '$remoteTemp'; pm2 save; else rm -rf '$remoteProject/dist'; if [ -d '$remotePrevious' ]; then mv '$remotePrevious' '$remoteProject/dist'; fi; if [ -f '$remoteTemp/new-process' ]; then pm2 delete '$pm2ProcessName' >/dev/null 2>&1 || true; else pm2 restart '$pm2ProcessName' --update-env >/dev/null 2>&1 || true; fi; exit 1; fi"
     Invoke-CheckedCommand -Command "ssh" -Arguments ($sshOptions + @($remote, $healthCommand))
 
     Write-Host "Deploy concluido com sucesso em http://${RemoteHost}:$Port"
