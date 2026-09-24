@@ -1,13 +1,16 @@
 import initSqlJs from 'sql.js';
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { storySql } from './story-data';
+import { practiceSql } from './lesson-data';
+import { prepareReadOnlyQuery } from './sql-guard';
 
 type QueryMessage = { id: number; sql: string };
 type Result = { columns: string[]; values: (string | number | null)[][] };
 
+// O nome do worker escolhe a base: a do mistério ou a de treino da documentação, sempre em memória e só leitura.
 const ready = initSqlJs({ locateFile: () => wasmUrl }).then(SQL => {
   const db = new SQL.Database();
-  db.run(storySql);
+  db.run(self.name === 'practice' ? practiceSql : storySql);
   return db;
 });
 
@@ -15,11 +18,7 @@ self.onmessage = async (event: MessageEvent<QueryMessage>) => {
   const { id, sql } = event.data;
   try {
     const db = await ready;
-    const trimmed = sql.trim().replace(/;\s*$/, '');
-    if (trimmed.length > 2500) throw new Error('Consulta muito longa. Tente uma pergunta mais curta.');
-    if (!/^(SELECT|WITH)\b/i.test(trimmed) || trimmed.includes(';')) {
-      throw new Error('Use uma única consulta de leitura começando com SELECT ou WITH.');
-    }
+    const trimmed = prepareReadOnlyQuery(sql);
     const statement = db.prepare(trimmed);
     const result: Result = { columns: statement.getColumnNames(), values: [] };
     try {
